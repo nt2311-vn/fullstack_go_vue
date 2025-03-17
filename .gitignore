@@ -1,0 +1,5 @@
+# Git ingore file
+
+bin/
+node_modules/
+.env
