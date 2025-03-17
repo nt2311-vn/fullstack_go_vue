@@ -22,6 +22,18 @@ func (q *Queries) DeleteUserImage(ctx context.Context, userID int64) error {
 	return err
 }
 
+const deleteUserWorkouts = `-- name: DeleteUserWorkouts :exec
+delete
+from gowebapp.workouts as w
+where w.user_id = $1
+`
+
+// delete a particular user's workouts
+func (q *Queries) DeleteUserWorkouts(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteUserWorkouts, userID)
+	return err
+}
+
 const deleteUsers = `-- name: DeleteUsers :exec
 delete
 from gowebapp.users
