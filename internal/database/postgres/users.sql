@@ -43,3 +43,9 @@ where user_id = $1;
 delete
 from gowebapp.images as i
 where i.user_id = $1;
+
+-- name: DeleteUserWorkouts :exec
+-- delete a particular user's workouts
+delete
+from gowebapp.workouts as w
+where w.user_id = $1;
