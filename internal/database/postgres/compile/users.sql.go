@@ -10,6 +10,35 @@ import (
 	"time"
 )
 
+const createUsers = `-- name: CreateUsers :one
+insert into gowebapp.users
+(User_Name, Pass_Word_Hash, name)
+values ($1, $2, $3)
+returning user_id, user_name, pass_word_hash, name, config, created_at, is_enabled
+`
+
+type CreateUsersParams struct {
+	UserName     string
+	PassWordHash string
+	Name         string
+}
+
+// insert new user
+func (q *Queries) CreateUsers(ctx context.Context, arg CreateUsersParams) (GowebappUser, error) {
+	row := q.db.QueryRowContext(ctx, createUsers, arg.UserName, arg.PassWordHash, arg.Name)
+	var i GowebappUser
+	err := row.Scan(
+		&i.UserID,
+		&i.UserName,
+		&i.PassWordHash,
+		&i.Name,
+		&i.Config,
+		&i.CreatedAt,
+		&i.IsEnabled,
+	)
+	return i, err
+}
+
 const deleteUserImage = `-- name: DeleteUserImage :exec
 delete
 from gowebapp.images as i

@@ -49,3 +49,10 @@ where i.user_id = $1;
 delete
 from gowebapp.workouts as w
 where w.user_id = $1;
+
+-- name: CreateUsers :one
+-- insert new user
+insert into gowebapp.users
+(User_Name, Pass_Word_Hash, name)
+values ($1, $2, $3)
+returning *;
