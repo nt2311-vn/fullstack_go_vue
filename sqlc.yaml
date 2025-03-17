@@ -1,0 +1,9 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "internal/database/postgres/*.sql"
+    schema: "internal/database/postgres/schema/schema.sql"
+    gen:
+      go:
+        package: "pg_database"
+        out: "internal/database/postgres/compile"
