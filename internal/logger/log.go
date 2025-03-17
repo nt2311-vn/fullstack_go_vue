@@ -3,16 +3,18 @@ package logger
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/kataras/golog"
 )
 
-var glog = golog.New()
+var Logger = golog.New()
 
 type remote struct{}
 
-func (r *remote) Write(data []byte) (n int, err error) {
+func (r remote) Write(data []byte) (n int, err error) {
 	go func() {
 		req, err := http.NewRequest("POST", "http://localhost:8010/log", bytes.NewBuffer(data))
 
@@ -29,4 +31,33 @@ func (r *remote) Write(data []byte) (n int, err error) {
 	}()
 
 	return len(data), nil
+}
+
+func SetLoggingOutput(localStdout bool) {
+	if localStdout {
+		configureLocal()
+		return
+	}
+
+	configureRemote()
+}
+
+func configureLocal() {
+	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer file.Close()
+
+	Logger.SetOutput(os.Stdout)
+	Logger.SetLevel("debug")
+	Logger.SetLevelOutput("info", file)
+}
+
+func configureRemote() {
+	r := remote{}
+
+	Logger.SetLevelFormat("info", "json")
+	Logger.SetLevelOutput("info", r)
 }

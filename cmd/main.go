@@ -3,15 +3,18 @@ package main
 import (
 	"context"
 	"database/sql"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	_ "github.com/lib/pq"
 
 	"github.com/joho/godotenv"
 	pg_database "github.com/nt2311-vn/fullstack_go_vue/internal/database/postgres/compile"
+	"github.com/nt2311-vn/fullstack_go_vue/internal/logger"
 )
 
 func main() {
@@ -25,45 +28,56 @@ func main() {
 		log.Fatal("pleasae recheck database connection string")
 	}
 
+	l := flag.Bool("local", false, "true - send to stdout, false - send to logging server")
+	flag.Parse()
+	logger.SetLoggingOutput(*l)
+
+	logger.Logger.Debugf("Application logging to stdout =%v", *l)
+	logger.Logger.Info("Starting the application...")
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatalf("cannot connect to database service %v", err)
+		logger.Logger.Errorf("cannot connect to database service: %s", err.Error())
 	}
 
 	defer db.Close()
 
 	if err := db.Ping(); err != nil {
-		log.Fatalf("cannot ping the database service %v", err)
+		logger.Logger.Errorf("cannot ping the database service: %s", err.Error())
 	}
 
-	if err = runSchema(db); err != nil {
-		log.Fatalln("cannot run executing schema file", err)
-	}
+	logger.Logger.Info("Database connected")
 
 	store := pg_database.New(db)
 	ctx := context.Background()
 
 	_, err = store.CreateUsers(ctx, pg_database.CreateUsersParams{
-		UserName:     "testuser",
+		UserName:     "testuser2",
 		PassWordHash: "hash",
-		Name:         "test",
+		Name:         "test2",
 	})
 	if err != nil {
-		log.Fatalln("error creating user: ", err)
+		logger.Logger.Fatalf("error creating user: %v", err)
 	}
+
+	logger.Logger.Info("Success - user created!")
 
 	eid, err := store.CreateExercise(ctx, "Exercise1")
 	if err != nil {
-		log.Fatalln("error creating exercise ", err)
+		logger.Logger.Errorf("error creating exercise: %v", err)
 	}
+
+	logger.Logger.Info("Success - exercise created!")
 
 	set, err := store.CreateSet(ctx, pg_database.CreateSetParams{
 		ExerciseID: eid,
 		Weight:     100,
 	})
 	if err != nil {
-		log.Fatalln("error updating exercise: ", err)
+		logger.Logger.Errorf("error creating set: %v", err)
 	}
+
+	logger.Logger.Info("Success - sets created!")
 
 	set, err = store.UpdateSet(ctx, pg_database.UpdateSetParams{
 		ExerciseID: eid,
@@ -71,19 +85,13 @@ func main() {
 		Weight:     200,
 	})
 	if err != nil {
-		log.Fatalln("error updating set: ", err)
+		logger.Logger.Errorf("error updating set: %v ", err)
 	}
 
-	log.Println("Done!")
+	logger.Logger.Info("Success - sets updated!")
+	logger.Logger.Info("Application complete!")
 
-	u, err := store.ListUsers(ctx)
-	if err != nil {
-		log.Fatalln("error listing users: ", err)
-	}
-
-	for _, user := range u {
-		fmt.Printf("Name: %s, ID: %d\n", user.Name, user.UserID)
-	}
+	defer time.Sleep(1 * time.Second)
 }
 
 func runSchema(db *sql.DB) error {
