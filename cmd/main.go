@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+
+	_ "github.com/lib/pq"
 
 	"github.com/joho/godotenv"
 	pg_database "github.com/nt2311-vn/fullstack_go_vue/internal/database/postgres/compile"
@@ -27,8 +30,14 @@ func main() {
 		log.Fatalf("cannot connect to database service %v", err)
 	}
 
+	defer db.Close()
+
 	if err := db.Ping(); err != nil {
 		log.Fatalf("cannot ping the database service %v", err)
+	}
+
+	if err = runSchema(db); err != nil {
+		log.Fatalln("cannot run executing schema file", err)
 	}
 
 	store := pg_database.New(db)
@@ -75,4 +84,19 @@ func main() {
 	for _, user := range u {
 		fmt.Printf("Name: %s, ID: %d\n", user.Name, user.UserID)
 	}
+}
+
+func runSchema(db *sql.DB) error {
+	schemaFile := filepath.Join("internal", "postgres", "schema", "schema.sql")
+	schema, err := os.ReadFile(schemaFile)
+	if err != nil {
+		return fmt.Errorf("cannot read schema file %v", err)
+	}
+
+	_, err = db.Exec(string(schema))
+	if err != nil {
+		return fmt.Errorf("cannot execute sql schema file: %v", err)
+	}
+
+	return nil
 }
