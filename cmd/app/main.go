@@ -5,9 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -29,7 +27,6 @@ func main() {
 	if connStr == "" {
 		log.Fatal("pleasae recheck database connection string")
 	}
-	startLogServer()
 
 	l := flag.Bool("local", false, "true - send to stdout, false - send to logging server")
 	flag.Parse()
@@ -95,25 +92,6 @@ func main() {
 	logger.Logger.Info("Application complete!")
 
 	defer time.Sleep(1 * time.Second)
-}
-
-func logHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading body", http.StatusInternalServerError)
-		return
-	}
-
-	defer r.Body.Close()
-	fmt.Println("Received log:", string(body))
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func startLogServer() {
-	http.HandleFunc("/log", logHandler)
-	log.Println("Log server running as port: 8010")
-	log.Fatal(http.ListenAndServe(":8010", nil))
 }
 
 func runSchema(db *sql.DB) error {
