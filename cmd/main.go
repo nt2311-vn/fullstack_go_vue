@@ -87,7 +87,7 @@ func main() {
 }
 
 func runSchema(db *sql.DB) error {
-	schemaFile := filepath.Join("internal", "postgres", "schema", "schema.sql")
+	schemaFile := filepath.Join("internal", "database", "postgres", "schema", "schema.sql")
 	schema, err := os.ReadFile(schemaFile)
 	if err != nil {
 		return fmt.Errorf("cannot read schema file %v", err)
