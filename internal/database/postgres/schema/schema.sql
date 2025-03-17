@@ -6,7 +6,7 @@ create table gowebapp.users (
   User_ID bigserial not null,
   User_Name text not null,
   Pass_Word_Hash text not null,
-  Name text not null
+  Name text not null,
   Config jsonb not null default '{}'::JSONB,
   Created_At timestamp not null default NOW(),
   Is_Enabled boolean not null default TRUE,
